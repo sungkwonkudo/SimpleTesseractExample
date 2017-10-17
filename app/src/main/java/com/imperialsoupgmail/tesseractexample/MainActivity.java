@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        cameraButton = (Button)findViewById(R.id.OCRbutton);
+        cameraButton.setOnClickListener(cameraListener);
         //init image
         image = BitmapFactory.decodeResource(getResources(), R.drawable.test_image);
 
