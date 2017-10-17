@@ -11,8 +11,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
@@ -25,9 +27,21 @@ import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
 
+    // Tesseract
     Bitmap image;
     private TessBaseAPI mTess;
     String datapath = "";
+
+    // Camera
+    private static int TAKE_PICTURE = 1;
+    protected ImageView mImageView;
+    private TextView mTextView;
+    private Button cameraButton;
+    private View.OnClickListener cameraListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            takePhoto(v);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void processImage(View view){
-        String OCRresult = null;
+        String OCRresult;
         mTess.setImage(image);
         OCRresult = mTess.getUTF8Text();
         TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
@@ -96,6 +110,27 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void takePhoto(View v) {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, TAKE_PICTURE);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+
+        if (requestCode == TAKE_PICTURE && resultCode == RESULT_OK) {
+            Bundle extras = intent.getExtras();
+            image = (Bitmap) extras.get("data");
+            mImageView.setImageBitmap(image);
+            //processImage(mImageView);
+        } else {
+            Toast.makeText(getApplicationContext(), "Error getting image", Toast.LENGTH_LONG).show();
         }
     }
 }
