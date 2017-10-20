@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     Bitmap image;
     private TessBaseAPI mTess;
     String datapath = "";
+    String LANG = "eng";
 
     // Camera
     private static int TAKE_PICTURE = 1;
@@ -50,11 +52,13 @@ public class MainActivity extends AppCompatActivity {
 
         cameraButton = (Button)findViewById(R.id.OCRbutton);
         cameraButton.setOnClickListener(cameraListener);
+        mImageView = (ImageView) findViewById(R.id.imageView);
+
         //init image
-        image = BitmapFactory.decodeResource(getResources(), R.drawable.test_image);
+        //image = BitmapFactory.decodeResource(getResources(), R.drawable.test_image);
 
         //initialize Tesseract API
-        String language = "eng";
+        String language = LANG;
         datapath = getFilesDir()+ "/tesseract/";
         mTess = new TessBaseAPI();
 
@@ -63,12 +67,11 @@ public class MainActivity extends AppCompatActivity {
         mTess.init(datapath, language);
     }
 
-    public void processImage(View view){
+    public String processImage(View view){
         String OCRresult;
         mTess.setImage(image);
         OCRresult = mTess.getUTF8Text();
-        TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
-        OCRTextView.setText(OCRresult);
+        return OCRresult;
     }
 
     private void checkFile(File dir) {
@@ -76,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 copyFiles();
         }
         if(dir.exists()) {
-            String datafilepath = datapath+ "/tessdata/eng.traineddata";
+            String datafilepath = datapath+ "/" + "tessdata/" + LANG + ".traineddata";
             File datafile = new File(datafilepath);
 
             if (!datafile.exists()) {
@@ -87,10 +90,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void copyFiles() {
         try {
-            String filepath = datapath + "/tessdata/eng.traineddata";
+            String filepath = datapath + "/" + "tessdata/" + LANG + ".traineddata";
             AssetManager assetManager = getAssets();
 
-            InputStream instream = assetManager.open("tessdata/eng.traineddata");
+            InputStream instream = assetManager.open("tessdata/" + LANG + ".traineddata");
             OutputStream outstream = new FileOutputStream(filepath);
 
             byte[] buffer = new byte[1024];
@@ -130,7 +133,9 @@ public class MainActivity extends AppCompatActivity {
             Bundle extras = intent.getExtras();
             image = (Bitmap) extras.get("data");
             mImageView.setImageBitmap(image);
-            //processImage(mImageView);
+            String result = processImage(mImageView);
+            TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
+            OCRTextView.setText(result);
         } else {
             Toast.makeText(getApplicationContext(), "Error getting image", Toast.LENGTH_LONG).show();
         }
