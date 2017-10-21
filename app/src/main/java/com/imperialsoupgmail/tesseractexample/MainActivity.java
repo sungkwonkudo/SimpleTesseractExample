@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     Bitmap image;
     private TessBaseAPI mTess;
     String datapath = "";
-    String LANG = "";
+    String LANG = "jpn";
 
     // Camera
     private static int TAKE_PICTURE = 1;
@@ -58,13 +58,13 @@ public class MainActivity extends AppCompatActivity {
         //image = BitmapFactory.decodeResource(getResources(), R.drawable.test_image);
 
         //initialize Tesseract API
-        LANG = "eng";
+        String language = LANG;
         datapath = getFilesDir()+ "/tesseract/";
         mTess = new TessBaseAPI();
 
         checkFile(new File(datapath + "tessdata/"));
 
-        mTess.init(datapath, LANG);
+        mTess.init(datapath, language);
     }
 
     public String processImage(View view){
