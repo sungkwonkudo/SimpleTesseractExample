@@ -138,8 +138,11 @@ public class MainActivity extends AppCompatActivity {
             image = (Bitmap) extras.get("data");
             mImageView.setImageBitmap(image);
             String result = processImage(mImageView);
+
+            String meaning = db.getFirstKanjiResult(Character.toString(result.charAt(0)));
+
             TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
-            OCRTextView.setText(result);
+            OCRTextView.setText(meaning);
         } else {
             Toast.makeText(getApplicationContext(), "Error getting image", Toast.LENGTH_LONG).show();
         }
