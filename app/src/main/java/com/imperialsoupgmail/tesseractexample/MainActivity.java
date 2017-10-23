@@ -45,19 +45,23 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    // SQLite Database
+    private Database db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Database initialization
+        db = new Database(this);
+
+        // Camera and image view
         cameraButton = (Button)findViewById(R.id.OCRbutton);
         cameraButton.setOnClickListener(cameraListener);
         mImageView = (ImageView) findViewById(R.id.imageView);
 
-        //init image
-        //image = BitmapFactory.decodeResource(getResources(), R.drawable.test_image);
-
-        //initialize Tesseract API
+        // Tesseract initialization
         String language = LANG;
         datapath = getFilesDir()+ "/tesseract/";
         mTess = new TessBaseAPI();
