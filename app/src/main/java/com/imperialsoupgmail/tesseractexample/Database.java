@@ -28,7 +28,7 @@ public class Database extends SQLiteAssetHelper {
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
         String[] sqlSelect = {"meaning"};
-        String sqlWhere = "kanji = " + kanji;
+        String sqlWhere = "kanji = " + "\"" + kanji + "\"";
         String sqlTables = "edict";
 
         qb.setTables(sqlTables);
