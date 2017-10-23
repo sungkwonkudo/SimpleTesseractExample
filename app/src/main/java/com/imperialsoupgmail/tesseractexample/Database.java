@@ -30,6 +30,8 @@ public class Database extends SQLiteAssetHelper {
         String[] sqlSelect = {"meaning"};
         String sqlWhere = "kanji = " + "kanji";
         String sqlTables = "edict";
+
+        qb.setTables(sqlTables);
         Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
 
         String result = "";
