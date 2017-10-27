@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.atilika.kuromoji.ipadic.Tokenizer;
+import com.atilika.kuromoji.ipadic.Token;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import java.io.File;
@@ -69,13 +70,11 @@ public class MainActivity extends AppCompatActivity {
         String language = LANG;
         datapath = getFilesDir()+ "/tesseract/";
         mTess = new TessBaseAPI();
-
         checkFile(new File(datapath + "tessdata/"));
-
         mTess.init(datapath, language);
 
         // Kuromoji
-        tokenizer = new Tokenizer();
+        tokenizer = new Tokenizer.Builder().build();
     }
 
     public String processImage(View view){
@@ -146,12 +145,21 @@ public class MainActivity extends AppCompatActivity {
             mImageView.setImageBitmap(image);
             String result = processImage(mImageView);
 
-            String meaning = db.getFirstKanjiResult(Character.toString(result.charAt(0)));
+            // Kuromoji Test: Get the OCR result and display it in the app split up
+            String holder = "";
+            for (Token token : tokenizer.tokenize(result)) {
+                holder += token.getSurface();
+            }
+
+            // Meaning... is the meaning that can be displayed. String.
+            //String meaning = db.getFirstKanjiResult(Character.toString(result.charAt(0)));
 
             TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
-            OCRTextView.setText(meaning);
+            OCRTextView.setText(holder);
         } else {
             Toast.makeText(getApplicationContext(), "Error getting image", Toast.LENGTH_LONG).show();
         }
     }
+
+
 }
