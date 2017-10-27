@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.atilika.kuromoji.ipadic.Tokenizer;
 import com.googlecode.tesseract.android.TessBaseAPI;
 
 import java.io.File;
@@ -48,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
     // SQLite Database
     private Database db;
 
+    // Kuromoji
+    Tokenizer tokenizer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +73,9 @@ public class MainActivity extends AppCompatActivity {
         checkFile(new File(datapath + "tessdata/"));
 
         mTess.init(datapath, language);
+
+        // Kuromoji
+        tokenizer = new Tokenizer();
     }
 
     public String processImage(View view){
