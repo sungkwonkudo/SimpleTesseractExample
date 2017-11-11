@@ -148,11 +148,12 @@ public class MainActivity extends AppCompatActivity {
             // Kuromoji Test: Get the OCR result and display it in the app split up
             String holder = "";
             for (Token token : tokenizer.tokenize(result)) {
-                holder += token.getSurface();
+                String meaning = db.getFirstKanjiResult(token.getSurface());
+
+                holder += token.getSurface() + " " + meaning + "\n";
             }
 
             // Meaning... is the meaning that can be displayed. String.
-            //String meaning = db.getFirstKanjiResult(Character.toString(result.charAt(0)));
 
             TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
             OCRTextView.setText(holder);

@@ -14,7 +14,7 @@ import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 // Database in assets/databases folder
 public class Database extends SQLiteAssetHelper {
 
-    private static final String DATABASE_NAME = "kanjidb.sqlite";
+    private static final String DATABASE_NAME = "JMdict.sqlite";
     private static final int DATABASE_VERSION = 1;
 
     public Database(Context context) {
@@ -27,17 +27,19 @@ public class Database extends SQLiteAssetHelper {
         SQLiteDatabase db = getWritableDatabase();
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
-        String[] sqlSelect = {"meaning"};
-        String sqlWhere = "kanji = " + "\"" + kanji + "\"";
-        String sqlTables = "edict";
+        String[] sqlSelect = {"gloss.value"};
+        String sqlWhere = "k_ele.value = " + "\"" + kanji + "\"";
+        String sqlTables = "entry LEFT JOIN k_ele ON entry.id = k_ele.fk "
+                + "LEFT JOIN sense ON entry.id = sense.fk "
+                + "LEFT JOIN gloss ON sense.id = gloss.fk";
 
         qb.setTables(sqlTables);
         Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
 
         String result = "";
         if(cursor.moveToFirst()){
-             result = cursor.getString(cursor.getColumnIndex("meaning"));
-        };
+             result = cursor.getString(cursor.getColumnIndex("gloss.value"));
+        }
         return result;
     }
 }
