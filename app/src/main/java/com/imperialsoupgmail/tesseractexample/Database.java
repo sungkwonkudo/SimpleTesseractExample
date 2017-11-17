@@ -23,24 +23,38 @@ public class Database extends SQLiteAssetHelper {
 
     public String getFirstKanjiResult(String kanji) {
 
+        class ThreadA implements Runnable{
+            String kanji;
+            String exportResult;
+            ThreadA(String s){
+                kanji = s;
+            }
 
-        SQLiteDatabase db = getWritableDatabase();
-        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+            public void run(){
+                SQLiteDatabase db = getWritableDatabase();
+                SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
-        String[] sqlSelect = {"gloss.value"};
-        String sqlWhere = "k_ele.value = " + "\"" + kanji + "\"";
-        String sqlTables = "entry LEFT JOIN k_ele ON entry.id = k_ele.fk "
-                + "LEFT JOIN sense ON entry.id = sense.fk "
-                + "LEFT JOIN gloss ON sense.id = gloss.fk";
+                String[] sqlSelect = {"gloss.value"};
+                String sqlWhere = "k_ele.value = " + "\"" + kanji + "\"";
+                String sqlTables = "entry LEFT JOIN k_ele ON entry.id = k_ele.fk "
+                        + "LEFT JOIN sense ON entry.id = sense.fk "
+                        + "LEFT JOIN gloss ON sense.id = gloss.fk";
 
-        qb.setTables(sqlTables);
-        Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
+                qb.setTables(sqlTables);
+                Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
 
-        String result = "";
-        if(cursor.moveToFirst()){
-             result = cursor.getString(cursor.getColumnIndex("gloss.value"));
+                String result = "";
+                if(cursor.moveToFirst()){
+                    result = cursor.getString(cursor.getColumnIndex("gloss.value"));
+                }
+                exportResult = result;
+            }
         }
-        return result;
+        ThreadA threadA = new ThreadA(kanji);
+        Thread t = new Thread(threadA);
+        t.start();
+
+        return threadA.exportResult;
     }
 }
 
