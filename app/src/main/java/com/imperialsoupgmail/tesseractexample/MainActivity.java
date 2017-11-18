@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
             final Bitmap image = (Bitmap) extras.get("data");
             mImageView.setImageBitmap(image);
 
+<<<<<<< HEAD
             // Multithread the application.
             // OCR is done in one thread, and the translation is done in another.
             final Thread first = new Thread(){
@@ -224,6 +225,12 @@ public class MainActivity extends AppCompatActivity {
             query.start();
             threadList.add(query);
         }
+=======
+            // Kuromoji Test: Get the OCR result and display it in the app split up
+            String holder = "";
+            for (Token token : tokenizer.tokenize(result)) {
+                String meaning = db.getFirstKanjiResult(token.getSurface());
+>>>>>>> parent of fe73864... Tidied up
 
         for(Thread t : threadList){
             try {
@@ -234,7 +241,11 @@ public class MainActivity extends AppCompatActivity {
         }
         return definitions;
 
+<<<<<<< HEAD
     }
+=======
+            // Meaning... is the meaning that can be displayed. String.
+>>>>>>> parent of fe73864... Tidied up
 
     private Handler dictHandler = new Handler(){
         public void handleMessage(Message msg){

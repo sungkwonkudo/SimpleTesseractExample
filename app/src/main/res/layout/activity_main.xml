@@ -61,4 +61,18 @@
 
     </ScrollView>
 
+<<<<<<< HEAD
+=======
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OCR Text will appear here"
+            android:id="@+id/OCRTextView"
+            android:textSize="18dp"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:background="#dedede"
+            android:textColor="#a3a3a3" />
+    </RelativeLayout>
+>>>>>>> parent of fe73864... Tidied up
 </LinearLayout>
