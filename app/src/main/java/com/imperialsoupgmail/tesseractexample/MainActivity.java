@@ -240,8 +240,12 @@ public class MainActivity extends AppCompatActivity {
         }
         return definitions;
 
+<<<<<<< HEAD
     }
     // Meaning... is the meaning that can be displayed. String.
+=======
+            // Meaning... is the meaning that can be displayed. String.
+>>>>>>> parent of fe73864... Tidied up
 
     private Handler dictHandler = new Handler(){
         public void handleMessage(Message msg){
