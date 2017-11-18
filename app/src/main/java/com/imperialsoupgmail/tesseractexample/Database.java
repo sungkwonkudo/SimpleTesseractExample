@@ -9,48 +9,51 @@ import android.telecom.Call;
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
+import java.util.regex.Pattern;
 
 /**
  * Created by Sungkwon Kudo on 10/22/17.
  */
 
 // Database in assets/databases folder
-public class Database extends SQLiteAssetHelper implements Callable{
+public class Database extends SQLiteAssetHelper {
 
     private static final String DATABASE_NAME = "JMdict.sqlite";
     private static final int DATABASE_VERSION = 1;
-    private static String kanji = "";
+
+    // For threading
+    private static String kanjiResult;
 
     public Database(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
-    public void setKanji(String input) {
-        kanji = input;
-    }
+    public String getFirstKanjiResult(String kanji) {
 
-    public String call() throws Exception{
-        SQLiteDatabase db = getWritableDatabase();
-        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        final SQLiteDatabase db = getWritableDatabase();
+        final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
-        String[] sqlSelect = {"gloss.value"};
-        String sqlWhere = "k_ele.value = " + "\"" + kanji + "\"";
-        String sqlTables = "entry LEFT JOIN k_ele ON entry.id = k_ele.fk "
+        final String[] sqlSelect = {"gloss.value"};
+
+        final String sqlWhere = "k_ele.value = " + "\"" + kanji + "\"";
+        final String sqlTables = "entry LEFT JOIN k_ele ON entry.id = k_ele.fk "
                 + "LEFT JOIN sense ON entry.id = sense.fk "
                 + "LEFT JOIN gloss ON sense.id = gloss.fk";
 
-        qb.setTables(sqlTables);
-        Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
+        new Thread(){
+            public void run(){
+                qb.setTables(sqlTables);
+                Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
 
-        String result = "";
-        if(cursor.moveToFirst()){
-            result = cursor.getString(cursor.getColumnIndex("gloss.value"));
-        }
-        return result;
+                if(cursor.moveToFirst()){
+                    kanjiResult = cursor.getString(cursor.getColumnIndex("value"));
+                }
+            }
+        }.start();
+
+
+        return kanjiResult;
+
     }
-
-
 }
 
