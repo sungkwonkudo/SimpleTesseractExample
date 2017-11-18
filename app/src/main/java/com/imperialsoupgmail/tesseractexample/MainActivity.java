@@ -29,6 +29,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
@@ -169,7 +171,8 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                     definitions = translate(OCRresults);
-                    dictHandler.sendEmptyMessage(0);
+                    TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
+                    OCRTextView.setText(definitions);
                 }
             };
             second.start();
@@ -182,34 +185,54 @@ public class MainActivity extends AppCompatActivity {
     // Isolated the translation code to run on a different thread.
     private String translate(final String input) {
 
-        // Kuromoji Test: Get the OCR result and display it in the app split up
+        // Result holder
         String holder = "";
-        String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
-        for (Token token : tokenizer.tokenize(input)) {
-            // Get the whole word
-            String strToken = token.getSurface();
-            boolean safety = true;
 
-            // Check if the 'word' contains punctuation
-            for(int i=0; i<strToken.length(); i++){
-                String str = Character.toString(strToken.charAt(i));
+        // Punctuation detector
+        final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
 
-                // If it contains punctuations,
-                // exit the loop and set safety indicator to false
-                if (punctuations.contains(str)){
-                    safety = false;
-                    i=strToken.length();
+        // List of threads to be run
+        List<Thread> threadList = new ArrayList<Thread>();
+
+        for (final Token token : tokenizer.tokenize(input)) {
+            // Run each query in a different thread
+            Thread query = new Thread(){
+                public void run(){
+                    // Get the whole word
+                    String strToken = token.getSurface();
+                    boolean safety = true;
+
+                    // Check if the 'word' contains punctuation
+                    for(int i=0; i<strToken.length(); i++){
+                        String str = Character.toString(strToken.charAt(i));
+
+                        // If it contains punctuations,
+                        // exit the loop and set safety indicator to false
+                        if (punctuations.contains(str)){
+                            safety = false;
+                            i=strToken.length();
+                        }
+                    }
+                    if(safety){
+                        // meaning... is the meaning that can be displayed. String.
+                        String meaning = db.getFirstKanjiResult(strToken);
+
+                        definitions += token.getSurface() + " " + meaning + "\n";
+                    }
                 }
-            }
-            if(safety){
-                // meaning... is the meaning that can be displayed. String.
-                String meaning = db.getFirstKanjiResult(strToken);
-
-                holder += token.getSurface() + " " + meaning + "\n";
-            }
+            };
+            query.start();
+            threadList.add(query);
         }
 
-        return holder;
+        for(Thread t : threadList){
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return definitions;
 
     }
 

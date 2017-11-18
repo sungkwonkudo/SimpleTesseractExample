@@ -40,16 +40,15 @@ public class Database extends SQLiteAssetHelper {
                 + "LEFT JOIN sense ON entry.id = sense.fk "
                 + "LEFT JOIN gloss ON sense.id = gloss.fk";
 
-        new Thread(){
-            public void run(){
-                qb.setTables(sqlTables);
-                Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
 
-                if(cursor.moveToFirst()){
-                    kanjiResult = cursor.getString(cursor.getColumnIndex("value"));
-                }
-            }
-        }.start();
+
+        qb.setTables(sqlTables);
+        Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
+
+        if(cursor.moveToFirst()){
+            kanjiResult = cursor.getString(cursor.getColumnIndex("value"));
+        }
+
 
 
         return kanjiResult;
