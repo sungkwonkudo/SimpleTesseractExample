@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
             String holder = "";
             for (Token token : tokenizer.tokenize(result)) {
                 // meaning... is the meaning that can be displayed. String.
-                String meaning = db.getFirstKanjiResult(token.getSurface());
+                String meaning = db.z(token.getSurface());
 
                 holder += token.getSurface() + " " + meaning + "\n";
             }
