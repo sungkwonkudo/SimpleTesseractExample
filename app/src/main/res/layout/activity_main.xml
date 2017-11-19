@@ -45,35 +45,20 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:id="@+id/OCRTextView"
-                android:textSize="18dp"
-                android:layout_centerVertical="true"
-                android:layout_centerHorizontal="true"
-                android:background="#dedede"
-                android:textColor="#a3a3a3"
-                android:scrollbars = "vertical"
-                android:maxLines="100"
-                />
-
-    </ScrollView>
-
-
-<<<<<<< HEAD
-=======
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="OCR Text will appear here"
+            android:text=""
             android:id="@+id/OCRTextView"
             android:textSize="18dp"
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true"
             android:background="#dedede"
-            android:textColor="#a3a3a3" />
-    </RelativeLayout>
->>>>>>> parent of fe73864... Tidied up
+            android:textColor="#a3a3a3"
+            android:scrollbars = "vertical"
+            android:maxLines="100"
+            />
+
+    </ScrollView>
+
 </LinearLayout>

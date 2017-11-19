@@ -7,8 +7,6 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
-import android.os.Handler;
-import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -29,14 +27,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
     // Tesseract
-    private Bitmap image;
+    Bitmap image;
     private TessBaseAPI mTess;
     String datapath = "";
     String LANG = "jpn";
@@ -57,10 +52,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Kuromoji
     Tokenizer tokenizer;
-
-    // Variables used in threading
-    private String definitions;
-    private String OCRresults;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,9 +77,9 @@ public class MainActivity extends AppCompatActivity {
         tokenizer = new Tokenizer.Builder().build();
     }
 
-    public String processImage(Bitmap bitmap){
+    public String processImage(View view){
         String OCRresult;
-        mTess.setImage(bitmap);
+        mTess.setImage(image);
         OCRresult = mTess.getUTF8Text();
         return OCRresult;
     }
@@ -145,116 +136,51 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, final Intent intent) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
         if (requestCode == TAKE_PICTURE && resultCode == RESULT_OK) {
             Bundle extras = intent.getExtras();
-            final Bitmap image = (Bitmap) extras.get("data");
+            image = (Bitmap) extras.get("data");
             mImageView.setImageBitmap(image);
-
-
-            // Multithread the application.
-            // OCR is done in one thread, and the translation is done in another.
-            final Thread first = new Thread(){
-                public void run(){
-                    OCRresults = processImage(image);
-
-                }
-            };
-            first.start();
-
-            Thread second = new Thread(){
-                public void run(){
-                    try {
-                        first.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    definitions = translate(OCRresults);
-                    TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
-                    OCRTextView.setText(definitions);
-                }
-            };
-            second.start();
-
-        } else {
-            Toast.makeText(getApplicationContext(), "Error getting image", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    // Isolated the translation code to run on a different thread.
-    private String translate(final String input) {
-
-        // Result holder
-        String holder = "";
-
-        // Punctuation detector
-        final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
-
-        // List of threads to be run
-        List<Thread> threadList = new ArrayList<Thread>();
-
-        for (final Token token : tokenizer.tokenize(input)) {
-            // Run each query in a different thread
-            Thread query = new Thread(){
-                public void run(){
-                    // Get the whole word
-                    String strToken = token.getSurface();
-                    boolean safety = true;
-
-                    // Check if the 'word' contains punctuation
-                    for(int i=0; i<strToken.length(); i++){
-                        String str = Character.toString(strToken.charAt(i));
-
-                        // If it contains punctuations,
-                        // exit the loop and set safety indicator to false
-                        if (punctuations.contains(str)){
-                            safety = false;
-                            i=strToken.length();
-                        }
-                    }
-                    if(safety){
-                        // meaning... is the meaning that can be displayed. String.
-                        String meaning = db.getFirstKanjiResult(strToken);
-
-                        definitions += token.getSurface() + " " + meaning + "\n";
-                    }
-                }
-            };
-            query.start();
-            threadList.add(query);
-        }
+            String result = processImage(mImageView);
 
             // Kuromoji Test: Get the OCR result and display it in the app split up
             String holder = "";
+
+            // Check for punctuations that could potentially crash the code and SQLite
+            final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
+
             for (Token token : tokenizer.tokenize(result)) {
-                String meaning = db.getFirstKanjiResult(token.getSurface());
+                // Get the whole word
+                String strToken = token.getSurface();
+                boolean safety = true;
 
-        for(Thread t : threadList){
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                // Check if the 'word' contains punctuation
+                for(int i=0; i<strToken.length(); i++){
+                    String str = Character.toString(strToken.charAt(i));
+
+                    // If it contains punctuations,
+                    // exit the loop and set safety indicator to false
+                    if (punctuations.contains(str)){
+                        safety = false;
+                        i=strToken.length();
+                    }
+                }
+                if(safety){
+                    // meaning... is the meaning that can be displayed. String.
+                    String meaning = db.getFirstKanjiResult(strToken);
+
+                    holder += token.getSurface() + " " + meaning + "\n";
+                }
             }
-        }
-        return definitions;
-
-<<<<<<< HEAD
-    }
-    // Meaning... is the meaning that can be displayed. String.
-=======
-            // Meaning... is the meaning that can be displayed. String.
->>>>>>> parent of fe73864... Tidied up
-
-    private Handler dictHandler = new Handler(){
-        public void handleMessage(Message msg){
-            super.handleMessage(msg);
             TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
-            OCRTextView.setText(definitions);
+            OCRTextView.setText(holder);
         }
-    };
-
+        else {
+            Toast.makeText(getApplicationContext(), "Error getting image", Toast.LENGTH_LONG).show();
+        }
+    }
 
 
 }
