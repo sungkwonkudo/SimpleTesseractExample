@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.provider.MediaStore;
+import android.renderscript.ScriptGroup;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +29,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -167,6 +171,8 @@ public class MainActivity extends AppCompatActivity {
         final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
 
         ExecutorService executor = Executors.newFixedThreadPool(8);
+        List<Future<String>> futureList = new ArrayList<>();
+        List<String> tokenList = new ArrayList<>();
 
         for (Token token : tokenizer.tokenize(input)) {
             // Get the whole word
@@ -186,12 +192,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if(safety){
-                //Future<String> kFuture = executor.submit(new db.Query());
-                Query qKanji = new Query(strToken, kdatabase);
-                // meaning... is the meaning that can be displayed. String.
-
-
-                holder += token.getSurface() + " " + qKanji.call() + "\n";
+                futureList.add(executor.submit(new Query(strToken, kdatabase)));
+                tokenList.add(token.getSurface());
+                //Query qKanji = new Query(strToken, kdatabase);
+                //holder += token.getSurface() + " " + qKanji.call() + "\n";
+            }
+        }
+        for(int i=0; i<tokenList.size() && i<futureList.size() ; i++){
+            try {
+                holder += tokenList.get(i)  + " " + futureList.get(i).get() + "\n";
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
             }
         }
         return holder;
