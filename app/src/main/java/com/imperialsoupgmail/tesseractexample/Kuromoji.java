@@ -15,9 +15,9 @@ public class Kuromoji implements Callable {
 
     final String words;
     Tokenizer tokenizer;
-    Kuromoji(String input) {
+    Kuromoji(String input, Tokenizer tokenizer) {
         this.words = input;
-        this.tokenizer = new Tokenizer();
+        this.tokenizer = tokenizer;
     }
 
     @Override
@@ -26,6 +26,6 @@ public class Kuromoji implements Callable {
         for(Token token : tokenizer.tokenize(words)){
             tokenList.add(token);
         }
-        return null;
+        return tokenList;
     }
 }

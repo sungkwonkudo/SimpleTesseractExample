@@ -187,8 +187,16 @@ public class MainActivity extends AppCompatActivity {
         ExecutorService executor = Executors.newFixedThreadPool(30);
         List<Future<String>> futureList = new ArrayList<>();
         List<String> tokenList = new ArrayList<>();
+        List<Token> wordList = null;
+        Future kuromojiFuture = executor.submit(new Kuromoji(input, tokenizer));
+        try {
+             wordList = (List<Token>) kuromojiFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
 
-        for (Token token : tokenizer.tokenize(input)) {
+        
+        for (Token token : wordList) {
             // Get the whole word
             String strToken = token.getSurface();
 
@@ -206,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if(safety){
-                tokenList.add(token.getSurface());
+                tokenList.add(strToken);
                 futureList.add(executor.submit(new Query(strToken, kDatabase)));
 
                 //Query qKanji = new Query(strToken, kdatabase);
