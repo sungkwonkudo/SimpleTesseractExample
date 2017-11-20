@@ -29,59 +29,13 @@ public class Database extends SQLiteAssetHelper {
     }
 
     // Non-threaded method
-    public String getFirstKanjiResult(String kanji) {
+    public SQLiteDatabase getFirstKanjiResult() {
 
         final SQLiteDatabase db = getWritableDatabase();
-        final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-
-        final String[] sqlSelect = {"gloss.value"};
-
-        final String sqlWhere = "k_ele.value = " + "\"" + kanji + "\"";
-        final String sqlTables = "entry LEFT JOIN k_ele ON entry.id = k_ele.fk "
-                + "LEFT JOIN sense ON entry.id = sense.fk "
-                + "LEFT JOIN gloss ON sense.id = gloss.fk";
-
-
-
-        qb.setTables(sqlTables);
-        Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
-
-        if(cursor.moveToFirst()){
-            kanjiResult = cursor.getString(cursor.getColumnIndex("value"));
-        }
-        return kanjiResult;
+        return db;
     }
 
-    // Threaded method
-    class Query implements Callable<String> {
-        String kanji;
-        public Query(String input) {
-            this.kanji = input;
-        }
 
-        @Override
-        public String call() throws Exception {
-            final SQLiteDatabase db = getWritableDatabase();
-            final SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-
-            final String[] sqlSelect = {"gloss.value"};
-
-            final String sqlWhere = "k_ele.value = " + "\"" + kanji + "\"";
-            final String sqlTables = "entry LEFT JOIN k_ele ON entry.id = k_ele.fk "
-                    + "LEFT JOIN sense ON entry.id = sense.fk "
-                    + "LEFT JOIN gloss ON sense.id = gloss.fk";
-
-
-
-            qb.setTables(sqlTables);
-            Cursor cursor = qb.query(db, sqlSelect, sqlWhere, null, null, null, null);
-
-            if(cursor.moveToFirst()){
-                kanjiResult = cursor.getString(cursor.getColumnIndex("value"));
-            }
-            return kanjiResult;
-        }
-    }
 
 }
 

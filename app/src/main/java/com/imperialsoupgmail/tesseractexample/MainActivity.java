@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
@@ -27,6 +28,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -156,15 +160,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public String defineKanji(String input){
-        // Kuromoji Test: Get the OCR result and display it in the app split up
         String holder = "";
+        SQLiteDatabase  kdatabase = db.getFirstKanjiResult();
 
         // Check for punctuations that could potentially crash the code and SQLite
         final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
 
+        ExecutorService executor = Executors.newFixedThreadPool(8);
+
         for (Token token : tokenizer.tokenize(input)) {
             // Get the whole word
             String strToken = token.getSurface();
+
             boolean safety = true;
 
             // Check if the 'word' contains punctuation
@@ -179,10 +186,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if(safety){
+                //Future<String> kFuture = executor.submit(new db.Query());
+                Query qKanji = new Query(strToken, kdatabase);
                 // meaning... is the meaning that can be displayed. String.
-                String meaning = db.getFirstKanjiResult(strToken);
 
-                holder += token.getSurface() + " " + meaning + "\n";
+
+                holder += token.getSurface() + " " + qKanji.call() + "\n";
             }
         }
         return holder;
