@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         if (requestCode == TAKE_PICTURE && resultCode == RESULT_OK) {
-            ExecutorService OCRexecutor = Executors.newFixedThreadPool(8);
+            ExecutorService OCRexecutor = Executors.newFixedThreadPool(30);
 
             Bundle extras = intent.getExtras();
             image = (Bitmap) extras.get("data");
@@ -158,7 +158,6 @@ public class MainActivity extends AppCompatActivity {
 
             // Do the OCR on a separate thread, use future to do in order.
             Future ocrFuture = OCRexecutor.submit(new processImage(image));
-
             String definition = "";
             try {
                 definition = defineKanji((String) ocrFuture.get());
@@ -182,12 +181,14 @@ public class MainActivity extends AppCompatActivity {
         SQLiteDatabase kDatabase = db.getDatabase();
 
         // Check for punctuations that could potentially crash the code and SQLite
-        final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
+        final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~` ";
 
         ExecutorService executor = Executors.newFixedThreadPool(30);
         List<Future<String>> futureList = new ArrayList<>();
         List<String> tokenList = new ArrayList<>();
         List<Token> wordList = null;
+
+        // Do tokenizing on a separate thread
         Future kuromojiFuture = executor.submit(new Kuromoji(input, tokenizer));
         try {
              wordList = (List<Token>) kuromojiFuture.get();

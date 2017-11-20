@@ -27,6 +27,7 @@ class Query implements Callable {
 
         final String[] sqlSelect = {"gloss.value"};
 
+
         final String sqlWhere = "k_ele.value = " + "\"" + kanji + "\"";
         final String sqlTables = "entry LEFT JOIN k_ele ON entry.id = k_ele.fk "
                 + "LEFT JOIN sense ON entry.id = sense.fk "
