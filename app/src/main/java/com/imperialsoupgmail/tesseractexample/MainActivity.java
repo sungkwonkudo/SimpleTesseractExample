@@ -193,7 +193,11 @@ public class MainActivity extends AppCompatActivity {
             }
             if(safety){
                 futureList.add(executor.submit(new Query(strToken, kdatabase)));
-                tokenList.add(token.getSurface());
+                if(token.getSurface() == null){
+                    tokenList.add("");
+                } else{
+                    tokenList.add(token.getSurface());
+                }
                 //Query qKanji = new Query(strToken, kdatabase);
                 //holder += token.getSurface() + " " + qKanji.call() + "\n";
             }
