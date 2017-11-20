@@ -145,41 +145,47 @@ public class MainActivity extends AppCompatActivity {
             mImageView.setImageBitmap(image);
             String result = processImage(mImageView);
 
-            // Kuromoji Test: Get the OCR result and display it in the app split up
-            String holder = "";
+            String definition = defineKanji(result);
 
-            // Check for punctuations that could potentially crash the code and SQLite
-            final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
-
-            for (Token token : tokenizer.tokenize(result)) {
-                // Get the whole word
-                String strToken = token.getSurface();
-                boolean safety = true;
-
-                // Check if the 'word' contains punctuation
-                for(int i=0; i<strToken.length(); i++){
-                    String str = Character.toString(strToken.charAt(i));
-
-                    // If it contains punctuations,
-                    // exit the loop and set safety indicator to false
-                    if (punctuations.contains(str)){
-                        safety = false;
-                        i=strToken.length();
-                    }
-                }
-                if(safety){
-                    // meaning... is the meaning that can be displayed. String.
-                    String meaning = db.getFirstKanjiResult(strToken);
-
-                    holder += token.getSurface() + " " + meaning + "\n";
-                }
-            }
             TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
-            OCRTextView.setText(holder);
+            OCRTextView.setText(definition);
         }
         else {
             Toast.makeText(getApplicationContext(), "Error getting image", Toast.LENGTH_LONG).show();
         }
+    }
+
+    public String defineKanji(String input){
+        // Kuromoji Test: Get the OCR result and display it in the app split up
+        String holder = "";
+
+        // Check for punctuations that could potentially crash the code and SQLite
+        final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
+
+        for (Token token : tokenizer.tokenize(input)) {
+            // Get the whole word
+            String strToken = token.getSurface();
+            boolean safety = true;
+
+            // Check if the 'word' contains punctuation
+            for(int i=0; i<strToken.length(); i++){
+                String str = Character.toString(strToken.charAt(i));
+
+                // If it contains punctuations,
+                // exit the loop and set safety indicator to false
+                if (punctuations.contains(str)){
+                    safety = false;
+                    i=strToken.length();
+                }
+            }
+            if(safety){
+                // meaning... is the meaning that can be displayed. String.
+                String meaning = db.getFirstKanjiResult(strToken);
+
+                holder += token.getSurface() + " " + meaning + "\n";
+            }
+        }
+        return holder;
     }
 
 
