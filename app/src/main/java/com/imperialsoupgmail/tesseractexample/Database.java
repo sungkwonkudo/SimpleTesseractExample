@@ -29,7 +29,7 @@ public class Database extends SQLiteAssetHelper {
     }
 
     // Non-threaded method
-    public SQLiteDatabase getFirstKanjiResult() {
+    public SQLiteDatabase getDatabase() {
 
         final SQLiteDatabase db = getWritableDatabase();
         return db;

@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
 
     public String defineKanji(String input){
         String holder = "";
-        SQLiteDatabase  kdatabase = db.getFirstKanjiResult();
+        SQLiteDatabase  kdatabase = db.getDatabase();
 
         // Check for punctuations that could potentially crash the code and SQLite
         final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
