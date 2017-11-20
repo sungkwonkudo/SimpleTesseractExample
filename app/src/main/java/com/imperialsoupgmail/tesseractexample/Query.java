@@ -10,7 +10,7 @@ import java.util.concurrent.Callable;
  * Created by wyki on 11/19/17.
  */
 
-public class Query {
+public class Query implements Callable {
 
     String kanji;
     String kResult;
