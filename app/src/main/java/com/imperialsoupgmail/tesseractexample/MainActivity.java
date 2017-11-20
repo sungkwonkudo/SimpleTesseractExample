@@ -1,18 +1,14 @@
 package com.imperialsoupgmail.tesseractexample;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.Image;
+
 import android.provider.MediaStore;
-import android.renderscript.ScriptGroup;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -31,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,11 +44,9 @@ public class MainActivity extends AppCompatActivity {
     // Camera
     private static int TAKE_PICTURE = 1;
     protected ImageView mImageView;
-    private TextView mTextView;
-    private Button cameraButton;
     private View.OnClickListener cameraListener = new View.OnClickListener() {
         public void onClick(View v) {
-            takePhoto(v);
+            takePhoto();
         }
     };
 
@@ -70,7 +65,8 @@ public class MainActivity extends AppCompatActivity {
         db = new Database(this);
 
         // Camera and image view
-        cameraButton = (Button)findViewById(R.id.OCRbutton);
+        Button cameraButton = (Button) findViewById(R.id.OCRbutton);
+        assert cameraButton != null;
         cameraButton.setOnClickListener(cameraListener);
         mImageView = (ImageView) findViewById(R.id.imageView);
 
@@ -85,11 +81,18 @@ public class MainActivity extends AppCompatActivity {
         tokenizer = new Tokenizer.Builder().build();
     }
 
-    public String processImage(View view){
-        String OCRresult;
-        mTess.setImage(image);
-        OCRresult = mTess.getUTF8Text();
-        return OCRresult;
+    private class processImage implements Callable{
+        Bitmap rawImage;
+
+        processImage(Bitmap inputImage){
+            this.rawImage = inputImage;
+        }
+
+        @Override
+        public Object call() throws Exception {
+            mTess.setImage(rawImage);
+            return mTess.getUTF8Text();
+        }
     }
 
     private void checkFile(File dir) {
@@ -129,14 +132,12 @@ public class MainActivity extends AppCompatActivity {
             if (!file.exists()) {
                 throw new FileNotFoundException();
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void takePhoto(View v) {
+    private void takePhoto() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, TAKE_PICTURE);
@@ -147,15 +148,28 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
+
         if (requestCode == TAKE_PICTURE && resultCode == RESULT_OK) {
+            ExecutorService OCRexecutor = Executors.newFixedThreadPool(8);
+
             Bundle extras = intent.getExtras();
             image = (Bitmap) extras.get("data");
             mImageView.setImageBitmap(image);
-            String result = processImage(mImageView);
 
-            String definition = defineKanji(result);
+            // Do the OCR on a separate thread, use future to do in order.
+            Future ocrFuture = OCRexecutor.submit(new processImage(image));
+
+            String definition = "";
+            try {
+                definition = defineKanji((String) ocrFuture.get());
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            } finally {
+                db.close();
+            }
 
             TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
+            assert OCRTextView != null;
             OCRTextView.setText(definition);
         }
         else {
@@ -165,12 +179,12 @@ public class MainActivity extends AppCompatActivity {
 
     public String defineKanji(String input){
         String holder = "";
-        SQLiteDatabase  kdatabase = db.getDatabase();
+        SQLiteDatabase kDatabase = db.getDatabase();
 
         // Check for punctuations that could potentially crash the code and SQLite
         final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
 
-        ExecutorService executor = Executors.newFixedThreadPool(8);
+        ExecutorService executor = Executors.newFixedThreadPool(30);
         List<Future<String>> futureList = new ArrayList<>();
         List<String> tokenList = new ArrayList<>();
 
@@ -192,22 +206,23 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if(safety){
-                futureList.add(executor.submit(new Query(strToken, kdatabase)));
-                if(token.getSurface() == null){
-                    tokenList.add("");
-                } else{
-                    tokenList.add(token.getSurface());
-                }
+                tokenList.add(token.getSurface());
+                futureList.add(executor.submit(new Query(strToken, kDatabase)));
+
                 //Query qKanji = new Query(strToken, kdatabase);
                 //holder += token.getSurface() + " " + qKanji.call() + "\n";
             }
         }
         for(int i=0; i<tokenList.size() && i<futureList.size() ; i++){
             try {
-                holder += tokenList.get(i)  + " " + futureList.get(i).get() + "\n";
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
+                String def;
+                if(futureList.get(i).get() == null){
+                    def = " ";
+                }else{
+                    def = futureList.get(i).get();
+                }
+                holder += tokenList.get(i)  + " " + def + "\n";
+            } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }

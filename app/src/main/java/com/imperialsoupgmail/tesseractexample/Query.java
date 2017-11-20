@@ -10,13 +10,13 @@ import java.util.concurrent.Callable;
  * Created by wyki on 11/19/17.
  */
 
-public class Query implements Callable {
+class Query implements Callable {
 
-    String kanji;
-    String kResult;
-    SQLiteDatabase db;
+    private String kanji;
+    private String kResult;
+    private SQLiteDatabase db;
 
-    public Query(String input, SQLiteDatabase database) {
+    Query(String input, SQLiteDatabase database) {
         this.kanji = input;
         this.db = database;
     }
