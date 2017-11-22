@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
     // SQLite Database
     private Database db;
+    SQLiteDatabase kDatabase;
 
     // Kuromoji
     Tokenizer tokenizer;
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Database initialization
         db = new Database(this);
-
+        kDatabase = db.getDatabase();
         // Camera and image view
         Button cameraButton = (Button) findViewById(R.id.OCRbutton);
         assert cameraButton != null;
@@ -179,8 +180,6 @@ public class MainActivity extends AppCompatActivity {
                 definition = defineKanji((String) ocrFuture.get());
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
-            } finally {
-                db.close();
             }
 
             TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
@@ -194,12 +193,11 @@ public class MainActivity extends AppCompatActivity {
 
     public String defineKanji(String input){
         String holder = "";
-        SQLiteDatabase kDatabase = db.getDatabase();
 
         // Check for punctuations that could potentially crash the code and SQLite
         final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~` ";
 
-        ExecutorService executor = Executors.newFixedThreadPool(8);
+        ExecutorService executor = Executors.newFixedThreadPool(30);
         List<Future<String>> futureList = new ArrayList<>();
         List<String> tokenList = new ArrayList<>();
         List<Token> wordList = null;
