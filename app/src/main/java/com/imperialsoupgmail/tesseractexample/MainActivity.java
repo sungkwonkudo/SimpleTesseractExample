@@ -7,8 +7,11 @@ import android.content.res.AssetManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -144,8 +147,13 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, intent);
 
         if (requestCode == TAKE_PICTURE && resultCode == RESULT_OK) {
-            Bundle extras = intent.getExtras();
-            image = (Bitmap) extras.get("data");
+            // Code commented out to test for threading speeds.
+            //Bundle extras = intent.getExtras();
+            //image = (Bitmap) extras.get("data");
+
+            // Test image
+            Drawable d = ContextCompat.getDrawable(this, R.drawable.test1);
+            image = ((BitmapDrawable)d).getBitmap();
             mImageView.setImageBitmap(image);
             String result = processImage(mImageView);
 
