@@ -28,9 +28,9 @@ public class Query {
         final String[] sqlSelect = {"gloss.value"};
 
         final String sqlWhere = "k_ele.value = " + "\"" + kanji + "\"";
-        final String sqlTables = "entry LEFT JOIN k_ele ON entry.id = k_ele.fk "
-                + "LEFT JOIN sense ON entry.id = sense.fk "
-                + "LEFT JOIN gloss ON sense.id = gloss.fk";
+        final String sqlTables = "entry INNER JOIN k_ele ON entry.id = k_ele.fk "
+                + "INNER JOIN sense ON entry.id = sense.fk "
+                + "INNER JOIN gloss ON sense.id = gloss.fk";
 
 
 
