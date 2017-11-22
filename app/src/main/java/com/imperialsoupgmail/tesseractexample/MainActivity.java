@@ -6,7 +6,10 @@ import android.content.res.AssetManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -152,8 +155,14 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == TAKE_PICTURE && resultCode == RESULT_OK) {
             ExecutorService OCRexecutor = Executors.newFixedThreadPool(30);
 
-            Bundle extras = intent.getExtras();
-            image = (Bitmap) extras.get("data");
+            // Code commented out to test for threading speeds.
+            //Bundle extras = intent.getExtras();
+            //image = (Bitmap) extras.get("data");
+
+            // Test image
+            Drawable d = ContextCompat.getDrawable(this, R.drawable.test1);
+            image = ((BitmapDrawable)d).getBitmap();
+
             mImageView.setImageBitmap(image);
 
             // Do the OCR on a separate thread, use future to do in order.
