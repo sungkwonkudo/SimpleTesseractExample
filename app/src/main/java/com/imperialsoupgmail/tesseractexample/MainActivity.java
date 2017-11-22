@@ -151,20 +151,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class getImage implements Callable{
-        Context cont;
-
-        getImage(Context c) {
-            this.cont = c;
-        }
-        @Override
-        public Bitmap call() throws Exception {
-            Drawable d = ContextCompat.getDrawable(cont, R.drawable.test1);
-            image = ((BitmapDrawable)d).getBitmap();
-
-            return image;
-        }
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -180,12 +166,8 @@ public class MainActivity extends AppCompatActivity {
 
 
             // Test image, hard coded into getImage class
-            Future<Bitmap> iFuture = executor.submit(new getImage(this));
-            try {
-                image = iFuture.get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
+            Drawable d = ContextCompat.getDrawable(this, R.drawable.test1);
+            image = ((BitmapDrawable)d).getBitmap();
             mImageView.setImageBitmap(image);
 
             // OCR
