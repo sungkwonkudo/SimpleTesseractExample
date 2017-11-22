@@ -166,8 +166,6 @@ public class MainActivity extends AppCompatActivity {
         // Check for punctuations that could potentially crash the code and SQLite
         final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
 
-        ExecutorService executor = Executors.newFixedThreadPool(8);
-
         for (Token token : tokenizer.tokenize(input)) {
             // Get the whole word
             String strToken = token.getSurface();
