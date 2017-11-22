@@ -153,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         if (requestCode == TAKE_PICTURE && resultCode == RESULT_OK) {
-            ExecutorService OCRexecutor = Executors.newFixedThreadPool(30);
+            ExecutorService OCRexecutor = Executors.newFixedThreadPool(2);
 
             // Code commented out to test for threading speeds.
             //Bundle extras = intent.getExtras();
@@ -163,7 +163,14 @@ public class MainActivity extends AppCompatActivity {
             Drawable d = ContextCompat.getDrawable(this, R.drawable.test1);
             image = ((BitmapDrawable)d).getBitmap();
 
-            mImageView.setImageBitmap(image);
+            Thread t = new Thread(){
+                @Override
+                public void run() {
+                    mImageView.setImageBitmap(image);
+                }
+            };
+
+            OCRexecutor.execute(t);
 
             // Do the OCR on a separate thread, use future to do in order.
             Future ocrFuture = OCRexecutor.submit(new processImage(image));
@@ -192,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         // Check for punctuations that could potentially crash the code and SQLite
         final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~` ";
 
-        ExecutorService executor = Executors.newFixedThreadPool(30);
+        ExecutorService executor = Executors.newFixedThreadPool(8);
         List<Future<String>> futureList = new ArrayList<>();
         List<String> tokenList = new ArrayList<>();
         List<Token> wordList = null;
