@@ -1,6 +1,7 @@
 package com.imperialsoupgmail.tesseractexample;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetManager;
@@ -14,6 +15,7 @@ import android.provider.MediaStore;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telecom.Call;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -31,6 +33,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -50,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private Button cameraButton;
     private View.OnClickListener cameraListener = new View.OnClickListener() {
         public void onClick(View v) {
-            takePhoto(v);
+            takePhoto();
         }
     };
 
@@ -84,11 +89,15 @@ public class MainActivity extends AppCompatActivity {
         tokenizer = new Tokenizer.Builder().build();
     }
 
-    public String processImage(View view){
+    class processImage implements Callable{
         String OCRresult;
-        mTess.setImage(image);
-        OCRresult = mTess.getUTF8Text();
-        return OCRresult;
+        @Override
+        public String call() throws Exception {
+            mTess.setImage(image);
+            OCRresult = mTess.getUTF8Text();
+            return OCRresult;
+        }
+
     }
 
     private void checkFile(File dir) {
@@ -135,10 +144,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void takePhoto(View v) {
+    private void takePhoto() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, TAKE_PICTURE);
+        }
+    }
+
+    class getImage implements Callable{
+        Context cont;
+
+        getImage(Context c) {
+            this.cont = c;
+        }
+        @Override
+        public Bitmap call() throws Exception {
+            Drawable d = ContextCompat.getDrawable(cont, R.drawable.test1);
+            image = ((BitmapDrawable)d).getBitmap();
+
+            return image;
         }
     }
 
@@ -147,17 +171,41 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, intent);
 
         if (requestCode == TAKE_PICTURE && resultCode == RESULT_OK) {
+            // Thread pool manager
+            ExecutorService executor = Executors.newFixedThreadPool(8);
+
             // Code commented out to test for threading speeds.
             //Bundle extras = intent.getExtras();
             //image = (Bitmap) extras.get("data");
 
-            // Test image
-            Drawable d = ContextCompat.getDrawable(this, R.drawable.test1);
-            image = ((BitmapDrawable)d).getBitmap();
-            mImageView.setImageBitmap(image);
-            String result = processImage(mImageView);
 
-            String definition = defineKanji(result);
+            // Test image, hard coded into getImage class
+            Future<Bitmap> iFuture = executor.submit(new getImage(this));
+            try {
+                image = iFuture.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+            mImageView.setImageBitmap(image);
+
+            // OCR
+            Future<String> tFuture = executor.submit(new processImage());
+            String result = null;
+            try {
+                result = tFuture.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+
+
+            Future<String> kFuture = executor.submit(new defineKanji(result));
+
+            String definition = null;
+            try {
+                definition = kFuture.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
 
             TextView OCRTextView = (TextView) findViewById(R.id.OCRTextView);
             OCRTextView.setText(definition);
@@ -167,40 +215,46 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public String defineKanji(String input){
-        String holder = "";
-        SQLiteDatabase  kdatabase = db.getFirstKanjiResult();
+    class defineKanji implements Callable{
+        String input;
+        defineKanji(String input){
+            this.input = input;
+        }
 
-        // Check for punctuations that could potentially crash the code and SQLite
-        final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
+        @Override
+        public String call() throws Exception {
+            String holder = "";
+            SQLiteDatabase kdatabase = db.getFirstKanjiResult();
 
-        for (Token token : tokenizer.tokenize(input)) {
-            // Get the whole word
-            String strToken = token.getSurface();
+            // Check for punctuations that could potentially crash the code and SQLite
+            final String punctuations = ".,<>:;\'\")(*&^%$#@!+_-=\\|[]{}?/~`";
 
-            boolean safety = true;
+            for (Token token : tokenizer.tokenize(input)) {
+                // Get the whole word
+                String strToken = token.getSurface();
 
-            // Check if the 'word' contains punctuation
-            for(int i=0; i<strToken.length(); i++){
-                String str = Character.toString(strToken.charAt(i));
+                boolean safety = true;
 
-                // If it contains punctuations,
-                // exit the loop and set safety indicator to false
-                if (punctuations.contains(str)){
-                    safety = false;
-                    i=strToken.length();
+                // Check if the 'word' contains punctuation
+                for(int i=0; i<strToken.length(); i++){
+                    String str = Character.toString(strToken.charAt(i));
+
+                    // If it contains punctuations,
+                    // exit the loop and set safety indicator to false
+                    if (punctuations.contains(str)){
+                        safety = false;
+                        i=strToken.length();
+                    }
+                }
+                if(safety){
+                    Query qKanji = new Query(strToken, kdatabase);
+
+                    holder += token.getSurface() + " " + qKanji.call() + "\n";
                 }
             }
-            if(safety){
-                //Future<String> kFuture = executor.submit(new db.Query());
-                Query qKanji = new Query(strToken, kdatabase);
-                // meaning... is the meaning that can be displayed. String.
-
-
-                holder += token.getSurface() + " " + qKanji.call() + "\n";
-            }
+            return holder;
         }
-        return holder;
+
     }
 
 
