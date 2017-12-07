@@ -40,6 +40,7 @@ public class Query {
         if(cursor.moveToFirst()){
             kResult = cursor.getString(cursor.getColumnIndex("value"));
         }
+        if(kResult == null) return " ";
         return kResult;
     }
 }

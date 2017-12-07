@@ -161,17 +161,21 @@ public class MainActivity extends AppCompatActivity {
             ExecutorService executor = Executors.newFixedThreadPool(8);
 
             // Code commented out to test for threading speeds.
-            //Bundle extras = intent.getExtras();
-            //image = (Bitmap) extras.get("data");
+            Bundle extras = intent.getExtras();
+            image = (Bitmap) extras.get("data");
 
 
             // Test image, hard coded into getImage class
-            Drawable d = ContextCompat.getDrawable(this, R.drawable.test1);
-            image = ((BitmapDrawable)d).getBitmap();
-            mImageView.setImageBitmap(image);
+       /*     Drawable d = ContextCompat.getDrawable(this, R.drawable.test1);
+            image = ((BitmapDrawable)d).getBitmap();*/
+
 
             // OCR
             Future<String> tFuture = executor.submit(new processImage());
+
+            // Set image during ocr
+            mImageView.setImageBitmap(image);
+
             String result = null;
             try {
                 result = tFuture.get();
